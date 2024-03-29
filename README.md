@@ -1,5 +1,6 @@
 BUH SAT so that we have an MVP for AURC!
-download the zip file and import it to platformIO
+git clone this repo and import to platformIO.
+latest build file can be found in Actions tab
 ![image](https://github.com/Sadteeto/BuhSat-v0/assets/87579232/93f3f46d-c03e-408b-838f-3d1e93fba854)
 ![image](https://github.com/Sadteeto/BuhSat-v0/assets/87579232/93f3f46d-c03e-408b-838f-3d1e93fba854)
 ![image](https://github.com/Sadteeto/BuhSat-v0/assets/87579232/93f3f46d-c03e-408b-838f-3d1e93fba854)
