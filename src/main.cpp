@@ -20,7 +20,7 @@
 TwoWire WireI2C(20, 21);
 UART RFD900_RADIO(12, 13);
 DFRobot_QMC5883 compass(&WireI2C, /*I2C addr*/QMC5883_ADDRESS);
-DFRobot_BMP390L_I2C baro(&WireI2C, baro.eSDOVDD);
+DFRobot_BMP390L_I2C baro(&WireI2C, baro.eSDOGND);
 BMI270 imu;
 volatile float declinationAngle = (11.0 + (7.0 / 60.0)) / (180 / PI);
 uint8_t bmiAddress = BMI2_I2C_PRIM_ADDR; // 0x68
