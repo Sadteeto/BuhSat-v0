@@ -7,13 +7,13 @@
 
 // put function declarations here:
 // the pi pico has its pin
-// BMI280 sensor INT1 ---> 3
-// BMI280 sensor INT2 ---> 4
-// BMP388 sensor INT  ---> 2
+// BMI270 sensor INT1 ---> 3
+// BMI270 sensor INT2 ---> 4
+// BMP390 sensor INT  ---> 2
 // I2C SCL pin ---> 21
 // I2C SDA pin ---> 20
 
-// BMI280 AND BMP388 AND QMC5883L ON THE SAME I2C BUS
+// BMI270 AND BMP390 AND QMC5883L ON THE SAME I2C BUS
 // RFD900_RADIO TX ---> 12
 // RFD900_RADIO RX ---> 13
 
