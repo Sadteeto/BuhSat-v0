@@ -12,6 +12,7 @@
 // BMP388 sensor INT  ---> 2
 // I2C SCL pin ---> 21
 // I2C SDA pin ---> 20
+
 // BMI280 AND BMP388 AND QMC5883L ON THE SAME I2C BUS
 // RFD900_RADIO TX ---> 12
 // RFD900_RADIO RX ---> 13
@@ -46,9 +47,15 @@ void setup() {
   WireI2C.begin();
   SerialUSB.begin(9600);
   RFD900_RADIO.begin(9600);
-
   
   // SETUP QMC5883L on WireI2C
+  
+  while (!compass.begin())
+  {
+    SerialUSB.println("Could not find a valid 5883 sensor, check wiring!");
+    delay(500);
+  }
+
   if(compass.isQMC())
   {
     SerialUSB.println("Initialize QMC5883");
@@ -69,22 +76,17 @@ void setup() {
     SerialUSB.println(compass.getSamples());
   }
 
-  while (!compass.begin())
-  {
-    SerialUSB.println("Could not find a valid 5883 sensor, check wiring!");
-    delay(500);
-  }
   
 
   // setup BMI270 on WireI2C
   while(imu.beginI2C(bmiAddress, WireI2C) != BMI2_OK)
-    {
+ {
         // Not connected, inform user
         SerialUSB.println("Error: BMI270 not connected, check wiring and I2C address!");
 
         // Wait a bit to see if connection is established
         delay(1000);
-    }
+  }
   
 
 
@@ -92,7 +94,8 @@ void setup() {
 
   // setup BMP390 on WireI2C
   int rslt;
-  while( ERR_OK != (rslt = baro.begin()) ){
+  while( ERR_OK != (rslt = baro.begin()) )
+  {
     if(ERR_DATA_BUS == rslt){
       SerialUSB.println("Data bus error!!!");
     }else if(ERR_IC_VERSION == rslt){
@@ -102,7 +105,8 @@ void setup() {
   }
   SerialUSB.println("Begin ok!");
 
-  while( !baro.setSamplingMode(baro.eUltraPrecision) ){
+  while( !baro.setSamplingMode(baro.eUltraPrecision) )
+  {
     SerialUSB.println("Set samping mode fail, retrying....");
     delay(3000);
   }
