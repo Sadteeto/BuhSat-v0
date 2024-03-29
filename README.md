@@ -3,8 +3,9 @@ git clone this repo and import to platformIO. <br />
 compiled uf2 file can be found in Actions tab - Artifacts <br />
 
 capabilities: <br />
+battery charging
 remote monitoring up to 40km <br />
-temperature <br />
+temperature monitoring<br />
 9-DOF motion monitoring <br />
  - gyro <br />
  - accel <br />
