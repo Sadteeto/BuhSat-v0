@@ -2,7 +2,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include "SparkFun_BMI270_Arduino_Library.h"
-#include "DFRobot_QMC5883.h"
+// #include "DFRobot_QMC5883.h"
 #include "DFRobot_BMP3XX.h"
 
 // put function declarations here:
@@ -19,17 +19,17 @@
 
 TwoWire WireI2C(20, 21);
 UART RFD900_RADIO(12, 13);
-DFRobot_QMC5883 compass(&WireI2C, /*I2C addr*/QMC5883_ADDRESS);
-DFRobot_BMP390L_I2C baro(&WireI2C, baro.eSDOGND);
+// DFRobot_QMC5883 compass(&WireI2C, /*I2C addr*/QMC5883_ADDRESS);
+DFRobot_BMP388_I2C baro(&WireI2C, baro.eSDOGND);
 BMI270 imu;
 volatile float declinationAngle = (11.0 + (7.0 / 60.0)) / (180 / PI);
 uint8_t bmiAddress = BMI2_I2C_PRIM_ADDR; // 0x68
 //uint8_t bmiAddress = BMI2_I2C_SEC_ADDR; // 0x69
-
+uint8_t ledState = 0;
 struct {
-    float magX;
-    float magY;
-    float magZ;
+    // float magX;
+    // float magY;
+    // float magZ;
     float accX;
     float accY;
     float accZ;
@@ -42,39 +42,41 @@ struct {
 } data_combined;
 
 
+
 void setup() {
   // SETUP i2c and virtual serial port and RFD900_RADIO
   WireI2C.begin();
   SerialUSB.begin(9600);
   RFD900_RADIO.begin(9600);
+  pinMode(25, OUTPUT);
   
   // SETUP QMC5883L on WireI2C
   
-  while (!compass.begin())
-  {
-    SerialUSB.println("Could not find a valid 5883 sensor, check wiring!");
-    delay(500);
-  }
+  // while (!compass.begin())
+  // {
+  //   SerialUSB.println("Could not find a valid 5883 sensor, check wiring!");
+  //   delay(500);
+  // }
 
-  if(compass.isQMC())
-  {
-    SerialUSB.println("Initialize QMC5883");
-    compass.setRange(QMC5883_RANGE_2GA);
-    SerialUSB.print("compass range is:");
-    SerialUSB.println(compass.getRange());
+  // if(compass.isQMC())
+  // {
+  //   SerialUSB.println("Initialize QMC5883");
+  //   compass.setRange(QMC5883_RANGE_2GA);
+  //   SerialUSB.print("compass range is:");
+  //   SerialUSB.println(compass.getRange());
 
-    compass.setMeasurementMode(QMC5883_CONTINOUS);
-    SerialUSB.print("compass measurement mode is:");
-    SerialUSB.println(compass.getMeasurementMode());
+  //   compass.setMeasurementMode(QMC5883_CONTINOUS);
+  //   SerialUSB.print("compass measurement mode is:");
+  //   SerialUSB.println(compass.getMeasurementMode());
 
-    compass.setDataRate(QMC5883_DATARATE_50HZ);
-    SerialUSB.print("compass data rate is:");
-    SerialUSB.println(compass.getDataRate());
+  //   compass.setDataRate(QMC5883_DATARATE_50HZ);
+  //   SerialUSB.print("compass data rate is:");
+  //   SerialUSB.println(compass.getDataRate());
 
-    compass.setSamples(QMC5883_SAMPLES_8);
-    SerialUSB.print("compass samples is:");
-    SerialUSB.println(compass.getSamples());
-  }
+  //   compass.setSamples(QMC5883_SAMPLES_8);
+  //   SerialUSB.print("compass samples is:");
+  //   SerialUSB.println(compass.getSamples());
+  // }
 
   
 
@@ -132,9 +134,10 @@ void setup() {
 
 
 void loop() {
+  ledState ^= 1;
   // read MAG data
-  compass.setDeclinationAngle(declinationAngle);
-  sVector_t mag = compass.readRaw();
+  // compass.setDeclinationAngle(declinationAngle);
+  // sVector_t mag = compass.readRaw();
   // read IMU data
   imu.getSensorData();
   // read BARO data
@@ -142,6 +145,8 @@ void loop() {
   float Pressure = baro.readPressPa();
   float altitude = baro.readAltitudeM();
 
+  // flip 25 pin high
+  digitalWrite(25, ledState);
 
 
   // // print MAG data
@@ -152,29 +157,29 @@ void loop() {
   // SerialUSB.print(" MAG Z: ");
   // SerialUSB.print(mag.ZAxis);
   // // print IMU data
-  // SerialUSB.print(" ACC X: ");
-  // SerialUSB.print(imu.data.accelX, 3);
-  // SerialUSB.print(" ACC Y: ");
-  // SerialUSB.print(imu.data.accelY, 3);
-  // SerialUSB.print(" ACC Z: ");
-  // SerialUSB.print(imu.data.accelZ, 3);
-  // SerialUSB.print(" GYRO X: ");
-  // SerialUSB.print(imu.data.gyroX, 3);
-  // SerialUSB.print(" GYRO Y: ");
-  // SerialUSB.print(imu.data.gyroY, 3);
-  // SerialUSB.print(" GYRO Z: ");
-  // SerialUSB.println(imu.data.gyroZ, 3);
-  // // print BARO data
-  // SerialUSB.print(" TEMP: ");
-  // SerialUSB.print(temperature);
-  // SerialUSB.print(" PRESS: ");
-  // SerialUSB.print(Pressure);
-  // SerialUSB.print(" ALT: ");
-  // SerialUSB.print(altitude);
+  SerialUSB.print(" ACC X: ");
+  SerialUSB.print(imu.data.accelX, 3);
+  SerialUSB.print(" ACC Y: ");
+  SerialUSB.print(imu.data.accelY, 3);
+  SerialUSB.print(" ACC Z: ");
+  SerialUSB.print(imu.data.accelZ, 3);
+  SerialUSB.print(" GYRO X: ");
+  SerialUSB.print(imu.data.gyroX, 3);
+  SerialUSB.print(" GYRO Y: ");
+  SerialUSB.print(imu.data.gyroY, 3);
+  SerialUSB.print(" GYRO Z: ");
+  SerialUSB.println(imu.data.gyroZ, 3);
+  // print BARO data
+  SerialUSB.print(" TEMP: ");
+  SerialUSB.print(temperature);
+  SerialUSB.print(" PRESS: ");
+  SerialUSB.print(Pressure);
+  SerialUSB.print(" ALT: ");
+  SerialUSB.print(altitude);
 
-  data_combined.magX = mag.XAxis;
-  data_combined.magY = mag.YAxis;
-  data_combined.magZ = mag.ZAxis;
+  // data_combined.magX = mag.XAxis;
+  // data_combined.magY = mag.YAxis;
+  // data_combined.magZ = mag.ZAxis;
   data_combined.accX = imu.data.accelX;
   data_combined.accY = imu.data.accelY;
   data_combined.accZ = imu.data.accelZ;
