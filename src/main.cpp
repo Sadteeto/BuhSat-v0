@@ -132,7 +132,6 @@ void setup() {
 
 }
 
-
 void loop() {
   ledState ^= 1;
   // read MAG data
@@ -148,6 +147,18 @@ void loop() {
   // flip 25 pin high
   digitalWrite(25, ledState);
 
+  // data_combined.magX = mag.XAxis;
+  // data_combined.magY = mag.YAxis;
+  // data_combined.magZ = mag.ZAxis;
+  data_combined.temp = temperature;
+  data_combined.press = Pressure;
+  data_combined.alt = altitude;
+  data_combined.accX = imu.data.accelY;
+  data_combined.accY = -imu.data.accelZ;
+  data_combined.accZ = imu.data.accelX;
+  data_combined.gyroX = -imu.data.gyroY;
+  data_combined.gyroY = imu.data.gyroZ;
+  data_combined.gyroZ = -imu.data.gyroX;
 
   // // print MAG data
   // SerialUSB.print("MAG X: ");
@@ -156,43 +167,32 @@ void loop() {
   // SerialUSB.print(mag.YAxis);
   // SerialUSB.print(" MAG Z: ");
   // SerialUSB.print(mag.ZAxis);
-  // // print IMU data
-  SerialUSB.print(" ACC X: ");
-  SerialUSB.print(imu.data.accelX, 3);
-  SerialUSB.print(" ACC Y: ");
-  SerialUSB.print(imu.data.accelY, 3);
-  SerialUSB.print(" ACC Z: ");
-  SerialUSB.print(imu.data.accelZ, 3);
-  SerialUSB.print(" GYRO X: ");
-  SerialUSB.print(imu.data.gyroX, 3);
-  SerialUSB.print(" GYRO Y: ");
-  SerialUSB.print(imu.data.gyroY, 3);
-  SerialUSB.print(" GYRO Z: ");
-  SerialUSB.println(imu.data.gyroZ, 3);
+
   // print BARO data
-  SerialUSB.print(" TEMP: ");
-  SerialUSB.print(temperature);
-  SerialUSB.print(" PRESS: ");
-  SerialUSB.print(Pressure);
-  SerialUSB.print(" ALT: ");
-  SerialUSB.print(altitude);
+  SerialUSB.print("temp: ");
+  SerialUSB.print(data_combined.temp);
+  SerialUSB.print(" pres: ");
+  SerialUSB.print(data_combined.press);
+  SerialUSB.print(" alt: ");
+  SerialUSB.print(data_combined.alt);
 
-  // data_combined.magX = mag.XAxis;
-  // data_combined.magY = mag.YAxis;
-  // data_combined.magZ = mag.ZAxis;
-  data_combined.accX = imu.data.accelX;
-  data_combined.accY = imu.data.accelY;
-  data_combined.accZ = imu.data.accelZ;
-  data_combined.gyroX = imu.data.gyroX;
-  data_combined.gyroY = imu.data.gyroY;
-  data_combined.gyroZ = imu.data.gyroZ;
-  data_combined.temp = temperature;
-  data_combined.press = Pressure;
-  data_combined.alt = altitude;
-
+  // // print IMU data
+  SerialUSB.print(" trans");
+  SerialUSB.print(" x: ");
+  SerialUSB.print(data_combined.accX, 3);
+  SerialUSB.print(" y: ");
+  SerialUSB.print(data_combined.accY, 3);
+  SerialUSB.print(" z: ");
+  SerialUSB.print(data_combined.accZ, 3);
+  SerialUSB.print(" rotat");
+  SerialUSB.print(" x: ");
+  SerialUSB.print(data_combined.gyroX, 3);
+  SerialUSB.print(" y: ");
+  SerialUSB.print(data_combined.gyroY, 3);
+  SerialUSB.print(" z: ");
+  SerialUSB.print(data_combined.gyroZ, 3);
+  SerialUSB.print("\n");
 
   RFD900_RADIO.write((uint8_t*)&data_combined, sizeof(data_combined));
-
-
 }
 
