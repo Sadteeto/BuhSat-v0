@@ -4,6 +4,11 @@
 #include "SparkFun_BMI270_Arduino_Library.h"
 // #include "DFRobot_QMC5883.h"
 #include "DFRobot_BMP3XX.h"
+#include <HardwareSerial.h>
+
+#define I2C_SDA 20
+#define I2C_SCL 21
+#define SerialUSB Serial2
 
 // put function declarations here:
 // the pi pico has its pin
@@ -17,10 +22,12 @@
 // RFD900_RADIO TX ---> 12
 // RFD900_RADIO RX ---> 13
 
-TwoWire WireI2C(20, 21);
-UART RFD900_RADIO(12, 13);
+// TwoWire WireI2C(20, 21);
+// TwoWire I2C = TwoWire(0/); /* create i2c instance */
+// UART RFD900_RADIO(12, 13);
+HardwareSerial RFD900_RADIO(1);
 // DFRobot_QMC5883 compass(&WireI2C, /*I2C addr*/QMC5883_ADDRESS);
-DFRobot_BMP388_I2C baro(&WireI2C, baro.eSDOGND);
+DFRobot_BMP388_I2C baro(&Wire, baro.eSDOGND);
 BMI270 imu;
 volatile float declinationAngle = (11.0 + (7.0 / 60.0)) / (180 / PI);
 uint8_t bmiAddress = BMI2_I2C_PRIM_ADDR; // 0x68
@@ -45,9 +52,10 @@ struct {
 
 void setup() {
   // SETUP i2c and virtual serial port and RFD900_RADIO
-  WireI2C.begin();
+  Wire.begin();
+  // I2C.begin(I2C_SDA, I2C_SCL); /* initialise i2c bus with sda and scl, third arg clock freq tbd*/
   SerialUSB.begin(9600);
-  RFD900_RADIO.begin(9600);
+  RFD900_RADIO.begin(9600, 12, 13);
   pinMode(25, OUTPUT);
   
   // SETUP QMC5883L on WireI2C
@@ -81,7 +89,7 @@ void setup() {
   
 
   // setup BMI270 on WireI2C
-  while(imu.beginI2C(bmiAddress, WireI2C) != BMI2_OK)
+  while(imu.beginI2C(bmiAddress, Wire) != BMI2_OK)
  {
         // Not connected, inform user
         SerialUSB.println("Error: BMI270 not connected, check wiring and I2C address!");
