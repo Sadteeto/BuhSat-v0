@@ -4,10 +4,22 @@
 #include "SparkFun_BMI270_Arduino_Library.h"
 // #include "DFRobot_QMC5883.h"
 #include "DFRobot_BMP3XX.h"
+#include "TinyGPS++.h"
 #include <HardwareSerial.h>
 
-#define I2C_SDA 20
-#define I2C_SCL 21
+#define UART1_TX 1
+#define UART1_RX 2
+#define I2C1_SCL 4
+#define I2C1_SDA 5
+#define SPI1_MOSI 8
+#define SPI1_MISO 9
+#define SPI1_CLK 10
+#define SPI1_CS 11
+#define I2C2_SCL 12
+#define I2C2_SDA 13
+#define UART2_TX 17
+#define UART2_RX 18
+
 #define SerialUSB Serial2
 
 // put function declarations here:
@@ -23,43 +35,52 @@
 // RFD900_RADIO RX ---> 13
 
 // TwoWire WireI2C(20, 21);
-// TwoWire I2C = TwoWire(0/); /* create i2c instance */
+// TwoWire I2C = TwoWire(0); /* create i2c instance */
 // UART RFD900_RADIO(12, 13);
+TinyGPSPlus gps;
 HardwareSerial RFD900_RADIO(1);
+HardwareSerial GPSSerial(2);
 // DFRobot_QMC5883 compass(&WireI2C, /*I2C addr*/QMC5883_ADDRESS);
 DFRobot_BMP388_I2C baro(&Wire, baro.eSDOGND);
 BMI270 imu;
-volatile float declinationAngle = (11.0 + (7.0 / 60.0)) / (180 / PI);
+volatile float declinatimonAngle = (11.0 + (7.0 / 60.0)) / (180 / PI);
 uint8_t bmiAddress = BMI2_I2C_PRIM_ADDR; // 0x68
-//uint8_t bmiAddress = BMI2_I2C_SEC_ADDR; // 0x69
+// uint8_t bmiAddress = BMI2_I2C_SEC_ADDR; // 0x69
 uint8_t ledState = 0;
-struct {
-    // float magX;
-    // float magY;
-    // float magZ;
-    float accX;
-    float accY;
-    float accZ;
-    float gyroX;
-    float gyroY;
-    float gyroZ;
-    float temp;
-    float press;
-    float alt;
+struct
+{
+  // float magX;
+  // float magY;
+  // float magZ;
+  float accX;
+  float accY;
+  float accZ;
+  float gyroX;
+  float gyroY;
+  float gyroZ;
+  float temp;
+  float press;
+  double alt;
+  double lat;
+  double lng;
+  uint32_t time;
 } data_combined;
 
-
-
-void setup() {
+void setup()
+{
   // SETUP i2c and virtual serial port and RFD900_RADIO
+  Wire.setPins(I2C1_SDA, I2C1_SCL);
   Wire.begin();
+  // WireI2C.setPins(I2C_SDA, I2C_SCL);
+  // WireI2C.begin(4,5);
   // I2C.begin(I2C_SDA, I2C_SCL); /* initialise i2c bus with sda and scl, third arg clock freq tbd*/
   SerialUSB.begin(9600);
-  RFD900_RADIO.begin(9600, 12, 13);
+  RFD900_RADIO.begin(9600, UART2_RX, UART2_TX);
   pinMode(25, OUTPUT);
-  
+  GPSSerial.begin(9600, UART1_RX, UART1_TX);
+
   // SETUP QMC5883L on WireI2C
-  
+
   // while (!compass.begin())
   // {
   //   SerialUSB.println("Could not find a valid 5883 sensor, check wiring!");
@@ -86,36 +107,33 @@ void setup() {
   //   SerialUSB.println(compass.getSamples());
   // }
 
-  
-
   // setup BMI270 on WireI2C
-  while(imu.beginI2C(bmiAddress, Wire) != BMI2_OK)
- {
-        // Not connected, inform user
-        SerialUSB.println("Error: BMI270 not connected, check wiring and I2C address!");
+  while (imu.beginI2C(bmiAddress, Wire) != BMI2_OK)
+  {
+    // Not connected, inform user
+    SerialUSB.println("Error: BMI270 not connected, check wiring and I2C address!");
 
-        // Wait a bit to see if connection is established
-        delay(1000);
+    // Wait a bit to see if connection is established
+    delay(1000);
   }
-  
-
-
-
 
   // setup BMP390 on WireI2C
   int rslt;
-  while( ERR_OK != (rslt = baro.begin()) )
+  while (ERR_OK != (rslt = baro.begin()))
   {
-    if(ERR_DATA_BUS == rslt){
+    if (ERR_DATA_BUS == rslt)
+    {
       SerialUSB.println("Data bus error!!!");
-    }else if(ERR_IC_VERSION == rslt){
+    }
+    else if (ERR_IC_VERSION == rslt)
+    {
       SerialUSB.println("Chip versions do not match!!!");
     }
     delay(3000);
   }
   SerialUSB.println("Begin ok!");
 
-  while( !baro.setSamplingMode(baro.eUltraPrecision) )
+  while (!baro.setSamplingMode(baro.eUltraPrecision))
   {
     SerialUSB.println("Set samping mode fail, retrying....");
     delay(3000);
@@ -133,15 +151,18 @@ void setup() {
   SerialUSB.println(" Hz");
 
   SerialUSB.println();
-
-
-
-
-
 }
 
-void loop() {
+void loop()
+{
   ledState ^= 1;
+
+  /* GPS data */
+  while (GPSSerial.available() > 0)
+  {
+    gps.encode(GPSSerial.read());
+  }
+
   // read MAG data
   // compass.setDeclinationAngle(declinationAngle);
   // sVector_t mag = compass.readRaw();
@@ -167,6 +188,12 @@ void loop() {
   data_combined.gyroX = -imu.data.gyroY;
   data_combined.gyroY = imu.data.gyroZ;
   data_combined.gyroZ = -imu.data.gyroX;
+
+  // add gps data
+  data_combined.lat = gps.location.lat();
+  data_combined.lng = gps.location.lng();
+  data_combined.alt = gps.altitude.meters();
+  data_combined.time = gps.time.value();
 
   // // print MAG data
   // SerialUSB.print("MAG X: ");
@@ -201,6 +228,5 @@ void loop() {
   SerialUSB.print(data_combined.gyroZ, 3);
   SerialUSB.print("\n");
 
-  RFD900_RADIO.write((uint8_t*)&data_combined, sizeof(data_combined));
+  RFD900_RADIO.write((uint8_t *)&data_combined, sizeof(data_combined));
 }
-
